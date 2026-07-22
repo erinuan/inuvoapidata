@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inuvo RSOC 分OM数据报告</title>
+<style>
+:root {
+  --bg: #f5f7fa; --card: #fff; --primary: #3b82f6; --primary-hover: #2563eb;
+  --text: #1e293b; --text-secondary: #64748b; --border: #e2e8f0;
+  --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+  --yest-bg: #e8f4fd;
+  color-scheme: light;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+/* Header */
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.header h1 { font-size: 24px; font-weight: 700; }
+.header h1 span { color: var(--primary); }
+.header .update-time { font-size: 13px; color: var(--text-secondary); background: var(--card); padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); white-space: nowrap; }
+.header .update-time .ut-label { color: var(--text-secondary); }
+.header .update-time .ut-value { color: var(--text); font-weight: 600; }
+
+/* Controls */
+.control-group { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: var(--card); padding: 14px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
+.control-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; }
+.date-input { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; width: 150px; }
+.date-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.pst-badge { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-left: 4px; }
+
+/* Operator multi-select */
+.op-select-wrap { position: relative; }
+.op-select-trigger { padding: 7px 28px 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; cursor: pointer; min-width: 160px; text-align: left; outline: none; white-space: nowrap; }
+.op-select-trigger:focus { border-color: var(--primary); }
+.op-select-trigger::after { content: '▼'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-secondary); pointer-events: none; }
+.op-select-trigger.warn { border-color: var(--warning); background: #fffbeb; }
+.op-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 200px; max-height: 240px; overflow-y: auto; }
+.op-dropdown.show { display: block; }
+.op-dropdown label { display: flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 400; color: var(--text); }
+.op-dropdown label:hover { background: #f8fafc; }
+.op-dropdown input[type="checkbox"] { accent-color: var(--primary); }
+
+/* Buttons */
+.btn { padding: 7px 18px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover { background: #f1f5f9; }
+.btn-outline.active { background: #dbeafe; border-color: var(--primary); color: var(--primary); }
+
+/* Summary */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.summary-card { background: var(--card); padding: 14px 18px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.summary-card .label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+.summary-card .value { font-size: 26px; font-weight: 700; line-height: 1.2; }
+.summary-card .value.green { color: var(--success); }
+.summary-card .value.gold { color: var(--warning); }
+.summary-card .sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+/* Loading / Error */
+.loading { display: none; text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+.loading.show { display: block; }
+.spinner { display: inline-block; width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-msg { display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
+.error-msg.show { display: block; }
+
+/* Table */
+.table-wrap { background: var(--card); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table-wrap th { background: #f8fafc; padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table-wrap th.num { text-align: right; }
+.table-wrap td { padding: 10px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.table-wrap td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.table-wrap tr:last-child td { border-bottom: none; }
+.table-wrap tr:hover td { background: #f8fafc; }
+
+/* Yesterday row */
+tr.yest-row td { background: var(--yest-bg) !important; border-bottom: 1px solid #bae6fd; }
+tr.yest-row:hover td { background: #d4ebf8 !important; }
+tr.yest-row .vs-label { font-size: 11px; color: #3b82f6; font-weight: 500; }
+
+/* Totals row */
+tr.total-row td { font-weight: 700; background: #f0f9ff; border-top: 2px solid var(--primary); }
+tr.total-row.yest-row td { background: #d9ecf8 !important; }
+
+/* Article cell */
+.article-cell { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.article-cell:hover { white-space: normal; overflow: visible; }
+
+/* Empty state */
+.empty-msg { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+.empty-msg .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container { padding: 10px; }
+  .header { flex-direction: column; gap: 10px; }
+  .header .update-time { align-self: flex-end; }
+  .control-group { flex-direction: column; align-items: stretch; }
+  .summary { grid-template-columns: repeat(2, 1fr); }
+  .table-wrap { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1><span>Inuvo</span> RSOC 分OM报告</h1>
+    <div class="update-time" id="update-time" style="visibility:hidden;">
+      <span class="ut-label">数据更新时间：</span><span class="ut-value" id="ut-value">--</span>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label for="pst-date">📅 日期</label>
+    <input type="date" class="date-input" id="pst-date">
+    <span class="pst-badge">PST/PDT</span>
+
+    <button class="btn btn-outline" id="vs-past-btn" title="对比前一天数据">Vs past day</button>
+
+    <div class="op-select-wrap" style="margin-left:12px;">
+      <div class="op-select-trigger warn" id="op-trigger" tabindex="0">优化师：请选择 ▼</div>
+      <div class="op-dropdown" id="op-dropdown">
+        <label><input type="checkbox" value="@Erin-李苑" class="op-cb"> @Erin-李苑</label>
+        <label><input type="checkbox" value="@Jolyne-冯妞妞" class="op-cb"> @Jolyne-冯妞妞</label>
+        <label><input type="checkbox" value="@Zoey-张翌" class="op-cb"> @Zoey-张翌</label>
+        <label><input type="checkbox" value="@Caroline-肖紫琪" class="op-cb"> @Caroline-肖紫琪</label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="query-btn" disabled>查询</button>
+    <span style="font-size:12px;color:var(--text-secondary);margin-left:auto;" id="clock"></span>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>正在拉取数据...</div>
+  </div>
+
+  <div class="error-msg" id="error"></div>
+
+  <div class="table-wrap" id="table-wrap" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px;"></th>
+          <th>产品</th>
+          <th>Camp_id</th>
+          <th class="num">回收</th>
+          <th class="num">转化</th>
+          <th class="num">RPC</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ======================== CONFIG ========================
+const ACCESS_TOKEN = '51bbe924-7a52-44a2-8d68-b41706348a1e';
+const BASE_URL = 'https://partners.inuvo.com/analytics/';
+
+// ======================== STATIC MAPPING (from Feishu sheet, updated 2026-07-23) ========================
+const CAMP_OPERATOR = {"1279000000":"@Erin-李苑","1279000001":"@Jolyne-冯妞妞","1279000002":"@Jolyne-冯妞妞","1279000003":"@Jolyne-冯妞妞","1279000004":"@Jolyne-冯妞妞","1279000005":"@Jolyne-冯妞妞","1279000006":"@Jolyne-冯妞妞","1279000007":"@Jolyne-冯妞妞","1279000008":"@Jolyne-冯妞妞","1279000009":"@Jolyne-冯妞妞","1279000010":"@Jolyne-冯妞妞","1279000011":"@Jolyne-冯妞妞","1279000012":"@Jolyne-冯妞妞","1279000013":"@Jolyne-冯妞妞","1279000014":"@Jolyne-冯妞妞","1279000015":"@Jolyne-冯妞妞","1279000016":"@Jolyne-冯妞妞","1279000017":"@Jolyne-冯妞妞","1279000018":"@Jolyne-冯妞妞","1279000019":"@Jolyne-冯妞妞","1279000020":"@Jolyne-冯妞妞","1279000024":"@Caroline-肖紫琪","1279000025":"@Caroline-肖紫琪","1279000026":"@Jolyne-冯妞妞","1279000027":"@Jolyne-冯妞妞","1279000028":"@Jolyne-冯妞妞","1279000029":"@Jolyne-冯妞妞","1279000030":"@Jolyne-冯妞妞","1279000031":"@Jolyne-冯妞妞","1279000032":"@Jolyne-冯妞妞","1279000033":"@Jolyne-冯妞妞","1279000034":"@Jolyne-冯妞妞","1279000035":"@Jolyne-冯妞妞","1279000036":"@Jolyne-冯妞妞","1279000037":"@Jolyne-冯妞妞","1279000038":"@Jolyne-冯妞妞","1279000039":"@Jolyne-冯妞妞","1279000040":"@Jolyne-冯妞妞","1279000041":"@Jolyne-冯妞妞","1279000042":"@Jolyne-冯妞妞","1279000043":"@Jolyne-冯妞妞","1279000044":"@Jolyne-冯妞妞","1279000045":"@Jolyne-冯妞妞","1279000046":"@Jolyne-冯妞妞","1279000047":"@Jolyne-冯妞妞","1279000048":"@Jolyne-冯妞妞","1279000049":"@Jolyne-冯妞妞","1279000050":"@Jolyne-冯妞妞","1279000051":"@Jolyne-冯妞妞","1279000052":"@Jolyne-冯妞妞","1279000053":"@Jolyne-冯妞妞","1279000054":"@Jolyne-冯妞妞","1279000055":"@Jolyne-冯妞妞","1279000056":"@Jolyne-冯妞妞","1279000057":"@Jolyne-冯妞妞","1279000058":"@Jolyne-冯妞妞","1279000059":"@Jolyne-冯妞妞","1279000060":"@Jolyne-冯妞妞","1279000061":"@Jolyne-冯妞妞","1279000062":"@Jolyne-冯妞妞","1279000063":"@Jolyne-冯妞妞","1279000064":"@Jolyne-冯妞妞","1279000065":"@Jolyne-冯妞妞","1279000066":"@Jolyne-冯妞妞","1279000067":"@Jolyne-冯妞妞","1279000068":"@Jolyne-冯妞妞","1279000069":"@Jolyne-冯妞妞","1279000070":"@Jolyne-冯妞妞","1279000071":"@Jolyne-冯妞妞","1279000072":"@Jolyne-冯妞妞","1279000073":"@Jolyne-冯妞妞","1279000074":"@Jolyne-冯妞妞","1279000075":"@Jolyne-冯妞妞","1279000076":"@Jolyne-冯妞妞","1279000077":"@Jolyne-冯妞妞","1279000078":"@Jolyne-冯妞妞","1279000079":"@Jolyne-冯妞妞","1279000081":"@Zoey-张翌","1279000083":"@Zoey-张翌","1279000084":"@Zoey-张翌","1279000085":"@Zoey-张翌","1279000086":"@Zoey-张翌","1279000087":"@Zoey-张翌","1279000088":"@Zoey-张翌","1279000089":"@Zoey-张翌","1279000090":"@Jolyne-冯妞妞","1279000091":"@Jolyne-冯妞妞","1279000092":"@Jolyne-冯妞妞","1279000093":"@Jolyne-冯妞妞","1279000094":"@Jolyne-冯妞妞","1279000095":"@Jolyne-冯妞妞","1279000096":"@Jolyne-冯妞妞","1279000097":"@Jolyne-冯妞妞","1279000098":"@Jolyne-冯妞妞","1279000099":"@Jolyne-冯妞妞","1279000100":"@Jolyne-冯妞妞","1279000101":"@Jolyne-冯妞妞","1279000102":"@Jolyne-冯妞妞","1279000103":"@Jolyne-冯妞妞","1279000104":"@Jolyne-冯妞妞","1279000105":"@Jolyne-冯妞妞","1279000106":"@Jolyne-冯妞妞","1279000107":"@Jolyne-冯妞妞","1279000108":"@Jolyne-冯妞妞","1279000109":"@Jolyne-冯妞妞","1279000110":"@Jolyne-冯妞妞","1279000111":"@Caroline-肖紫琪","1279000112":"@Caroline-肖紫琪","1279000122":"@Zoey-张翌","1279000123":"@Zoey-张翌","1279000124":"@Zoey-张翌","1279000125":"@Zoey-张翌","1279000126":"@Zoey-张翌","1279000127":"@Zoey-张翌","1279000128":"@Zoey-张翌","1279000129":"@Zoey-张翌","1279000130":"@Zoey-张翌","1279000131":"@Zoey-张翌","1279000132":"@Zoey-张翌","1279000133":"@Zoey-张翌","1279000134":"@Zoey-张翌","1279000135":"@Zoey-张翌","1279000136":"@Zoey-张翌","1279000137":"@Zoey-张翌","1279000138":"@Zoey-张翌","1279000139":"@Zoey-张翌","1279000140":"@Zoey-张翌","1279000141":"@Zoey-张翌","1279000142":"@Zoey-张翌","1279000143":"@Zoey-张翌","1279000144":"@Zoey-张翌","1279000145":"@Zoey-张翌","1279000146":"@Zoey-张翌","1279000150":"@Jolyne-冯妞妞","1279000151":"@Jolyne-冯妞妞","1279000152":"@Jolyne-冯妞妞","1279000153":"@Jolyne-冯妞妞","1279000154":"@Jolyne-冯妞妞","1279000155":"@Jolyne-冯妞妞","1279000156":"@Jolyne-冯妞妞","1279000157":"@Jolyne-冯妞妞","1279000158":"@Jolyne-冯妞妞","1279000159":"@Jolyne-冯妞妞","1279000160":"@Jolyne-冯妞妞","1279000161":"@Jolyne-冯妞妞","1279000162":"@Jolyne-冯妞妞","1279000163":"@Jolyne-冯妞妞","1279000164":"@Jolyne-冯妞妞","1279000165":"@Jolyne-冯妞妞","1279000166":"@Jolyne-冯妞妞","1279000167":"@Jolyne-冯妞妞","1279000168":"@Jolyne-冯妞妞","1279000169":"@Jolyne-冯妞妞","1279000170":"@Jolyne-冯妞妞","1279000171":"@Jolyne-冯妞妞","1279000172":"@Jolyne-冯妞妞","1279000173":"@Jolyne-冯妞妞","1279000174":"@Jolyne-冯妞妞","1279000175":"@Jolyne-冯妞妞","1279000176":"@Jolyne-冯妞妞","1279000177":"@Jolyne-冯妞妞","1279000178":"@Jolyne-冯妞妞","1279000179":"@Jolyne-冯妞妞","1279000184":"@Zoey-张翌","1279000185":"@Zoey-张翌","1279000187":"@Zoey-张翌","1279000193":"@Zoey-张翌","1279000194":"@Zoey-张翌","1279000197":"@Zoey-张翌","1279000208":"@Zoey-张翌","1279000210":"@Caroline-肖紫琪","1279000211":"@Caroline-肖紫琪","1279000212":"@Caroline-肖紫琪","1279000213":"@Caroline-肖紫琪","1279000214":"@Caroline-肖紫琪","1279000215":"@Caroline-肖紫琪","1279000216":"@Caroline-肖紫琪","1279000217":"@Caroline-肖紫琪","1279000218":"@Caroline-肖紫琪","1279000219":"@Caroline-肖紫琪","1279000220":"@Caroline-肖紫琪","1279000221":"@Caroline-肖紫琪","1279000222":"@Caroline-肖紫琪","1279000223":"@Caroline-肖紫琪","1279000224":"@Caroline-肖紫琪","1279000225":"@Caroline-肖紫琪","1279000226":"@Caroline-肖紫琪","1279000227":"@Caroline-肖紫琪","1279000228":"@Caroline-肖紫琪","1279000229":"@Caroline-肖紫琪","1279000230":"@Jolyne-冯妞妞","1279000231":"@Jolyne-冯妞妞","1279000232":"@Jolyne-冯妞妞","1279000233":"@Jolyne-冯妞妞","1279000234":"@Jolyne-冯妞妞","1279000235":"@Jolyne-冯妞妞","1279000236":"@Jolyne-冯妞妞","1279000237":"@Jolyne-冯妞妞","1279000238":"@Jolyne-冯妞妞","1279000239":"@Jolyne-冯妞妞","1279000241":"@Zoey-张翌","1279000242":"@Zoey-张翌","1279000243":"@Zoey-张翌","1279000244":"@Zoey-张翌","1279000245":"@Zoey-张翌","1279000246":"@Zoey-张翌","1279000247":"@Zoey-张翌","1279000248":"@Zoey-张翌","1279000249":"@Zoey-张翌","1279000250":"@Caroline-肖紫琪","1279000251":"@Caroline-肖紫琪","1279000252":"@Caroline-肖紫琪","1279000253":"@Caroline-肖紫琪","1279000254":"@Caroline-肖紫琪","1279000255":"@Caroline-肖紫琪","1279000256":"@Caroline-肖紫琪","1279000257":"@Caroline-肖紫琪","1279000258":"@Caroline-肖紫琪","1279000259":"@Caroline-肖紫琪","1279000260":"@Caroline-肖紫琪","1279000261":"@Caroline-肖紫琪","1279000262":"@Caroline-肖紫琪","1279000263":"@Caroline-肖紫琪","1279000264":"@Caroline-肖紫琪","1279000265":"@Caroline-肖紫琪","1279000266":"@Caroline-肖紫琪","1279000267":"@Caroline-肖紫琪","1279000268":"@Caroline-肖紫琪","1279000269":"@Caroline-肖紫琪","1279000270":"@Zoey-张翌","1279000271":"@Zoey-张翌","1279000272":"@Zoey-张翌","1279000280":"@Zoey-张翌","1279000281":"@Zoey-张翌","1279000282":"@Zoey-张翌","1279000283":"@Zoey-张翌","1279000284":"@Zoey-张翌","1279000285":"@Zoey-张翌","1279000286":"@Zoey-张翌","1279000287":"@Zoey-张翌","1279000288":"@Zoey-张翌","1279000289":"@Zoey-张翌","1279000290":"@Jolyne-冯妞妞","1279000291":"@Jolyne-冯妞妞","1279000292":"@Jolyne-冯妞妞","1279000293":"@Jolyne-冯妞妞","1279000294":"@Jolyne-冯妞妞","1279000295":"@Jolyne-冯妞妞","1279000296":"@Jolyne-冯妞妞","1279000297":"@Jolyne-冯妞妞","1279000298":"@Jolyne-冯妞妞"};
+
+const CAMP_ARTICLE = {"1279000000":"两居室租房","1279000001":"0623 InuSE-FB-美国-医保报销升降椅【1】","1279000002":"0623 InuSE-FB-美国-二手变速器【2】","1279000003":"0623 InuSE-FB-美国-医保报销尿布【3】","1279000004":"0623 InuSE-FB-美国-车辆维护清洁工具【4】","1279000005":"0623 InuSE-FB-美国-家庭清洁技巧【5】","1279000006":"0623 InuSE-FB-美国-亚马逊10大产品【6】","1279000007":"0623 InuSE-FB-美国-云存储【7】","1279000008":"0623 InuSE-FB-美国-Designer清仓【8】","1279000009":"0623 InuSE-FB-美国-维京游轮旅游【9】","1279000010":"0623 InuSE-FB-美国-查尔斯顿游轮旅游【10】","1279000011":"TireDeals062401US","1279000012":"TireDeals062402US","1279000013":"TireDeals062403US","1279000014":"WalmartMichelinTires0626US","1279000015":"0625 InuSE-FB-美国-山姆轮胎【2】","1279000016":"0625 InuSE-FB-美国-沃尔玛助听器【3】","1279000017":"CostcoMichelinTires0626US","1279000018":"0625 InuSE-FB-美国-顶尖癌症医院【5】","1279000019":"0625 InuSE-FB-美国-前20康复医院【6】","1279000020":"0625 InuSE-FB-美国-top15癌症医院【7】","1279000024":"iPhone180715US","1279000025":"0521-CR-inuse-tt-美国-福特-F150","1279000026":"0629 InuSE-FB-英国-窗式空调【1】","1279000027":"0629 InuSE-FB-法国-窗式空调【2】","1279000028":"0629 InuSE-FB-德国-窗式空调【3】","1279000029":"toptengadgets1US","1279000030":"0629 InuSE-FB-西班牙-窗式空调【4】","1279000031":"SUV0630US","1279000032":"0630 InuSE-FB-英国-顶尖大学【2】","1279000033":"CostcoCableTV0630US","1279000034":"AT&TTV0630US","1279000035":"TMobileTV0630US","1279000036":"XfinityTV0630US","1279000037":"VerizonTV0630US","1279000038":"WalmartTV0630US","1279000039":"0701 InuSE-FB-美国-亚马逊轮胎【1】","1279000040":"toptengadgets070701US","1279000041":"0702 InuSE-FB-美国-美国-女性私密护理【2】","1279000042":"0702 InuSE-FB-美国-美国-女性私密护理【3】","1279000043":"0706 InuSE-FB-美国-沃尔玛轮胎比价指南【1】","1279000044":"toptengadgets2US","1279000045":"toptengadgets3US","1279000046":"0707 InuSE-FB-美国-Ashley Furniture 清仓【1】","1279000047":"0707 InuSE-FB-美国-足部霜【2】","1279000048":"UsedNissanRogues0708US","1279000049":"0707 InuSE-FB-美国-旅行拖车月租方案【4】","1279000050":"0708 InuSE-FB-美国-减肥指南【1】","1279000051":"0708 InuSE-FB-美国-米其林防爆轮胎【2】","1279000052":"2027Silverado0709US","1279000053":"5Drinks0709US","1279000054":"toptengadgets052201US","1279000055":"toptengadgets052202US","1279000056":"LegsDrinks0709US","1279000057":"0709 InuSE-FB-美国-Costco车险【1】","1279000059":"SingleMothersHousing0715US","1279000061":"Skin0715US","1279000062":"MetalRoofing0715US","1279000064":"ArtificialTurf0715US","1279000065":"spermdonation0715US","1279000066":"GameSkinTrading0715US","1279000067":"Facebook0715US","1279000068":"Top5city0716US","1279000069":"PetInsurance0716US","1279000070":"PetOdorRemoval0716US","1279000071":"Lawyers0715US","1279000081":"0417 人造石板墙-美国","1279000083":"0420 4*8仿石板-美国","1279000093":"0610 InuSE-FB-英国-老年人短途旅游","1279000094":"0610 InuSE-FB-英国-省电指南","1279000099":"0612 InuSE-FB-英国-女性护理设备【7】","1279000101":"0612 InuSE-FB-美国-10件不应该丢的东西【9】","1279000106":"0618 InuSE-FB-美国-65+福利【1】","1279000107":"0618 InuSE-FB-美国-15种值钱的硬币【2】","1279000108":"0618 InuSE-FB-美国-洗衣液援助【3】","1279000109":"0618 InuSE-FB-美国-50岁免费植牙【4】","1279000111":"0601-inuse-tt-加拿大-老年车险【要英文URL】【2】","1279000112":"0601-inuse-tt-西班牙-电工培训【要英文URL】【1】","1279000122":"0612-InuSe-FB-美国-医用阴茎泵【3】","1279000123":"0612-InuSe-FB-美国-猫砂盆甩卖【4】","1279000124":"0615-InuSe-FB-美国-雪佛兰跑车【1】","1279000125":"0615-InuSe-FB-美国-女性智能设备【2】","1279000126":"0623-InuSe-FB-美国-Verizon热点套餐【1】","1279000127":"0615-InuSe-FB-美国-离婚律师【3】","1279000128":"0623-InuSe-FB-美国-T-Mobile套餐【2】","1279000129":"0623-InuSe-FB-美国-Xfinity TV套餐【3】","1279000130":"0617-InuSe-FB-美国-70+泳衣【1】","1279000131":"0617-InuSe-FB-美国-阴道异味【2】","1279000132":"0617-InuSe-FB-美国-男性湿身泳装【3】","1279000133":"0617-InuSe-FB-英国-鸡蛋包装工作【4】","1279000134":"0618-InuSe-FB-美国-园艺工作（西语）【1】","1279000135":"0621-InuSe-FB-美国-Medicare送餐服务【3】","1279000136":"0618-InuSe-FB-美国-60+兼职工作（西语）【2】","1279000137":"0618-InuSe-FB-加拿大-废物管理工作【3】","1279000138":"0624-InuSe-FB-美国-宠物用品清仓【1】","1279000139":"0618-InuSe-FB-美国-各州工程薪资【4】","1279000140":"0618-InuSe-FB-加拿大-医疗配送司机【5】","1279000141":"0621-InuSe-FB-美国-不胜诉不收费律师【1】","1279000142":"0624-InuSe-FB-美国-户外猫笼清仓【2】","1279000143":"0624-InuSe-FB-美国-亚马逊会员日Apple Watch优惠【3】","1279000144":"0624-InuSe-FB-美国-亚马逊会员日iPad优惠【4】","1279000145":"0624-InuSe-FB-美国-润滑性唤起【5】","1279000146":"0621-InuSe-FB-美国-Dish Tv套餐【2】","1279000158":"0525 InuSE-FB-美国-洗衣液援助【5】","1279000178":"0618 InuSE-FB-美国-LPN培训【8】","1279000179":"Tirediscounts0622US","1279000184":"0624-InuSe-FB-美国-女士夏季凉鞋【6】","1279000185":"0624-InuSe-FB-美国-60分钟按摩【7】","1279000187":"0630-InuSe-FB-美国-尿失禁治疗【1】","1279000193":"0630-InuSe-FB-美国-阴唇入口套管【2】","1279000194":"0630-InuSe-FB-美国-女性甲状腺症状【3】","1279000197":"0630-InuSe-FB-美国-前列腺癌激素疗法【4】","1279000208":"0630-InuSe-FB-美国-PSA水平【5】","1279000210":"AmazonAppleWatch0715US","1279000211":"WalmartiPhonesale0715US","1279000212":"CostcoInter0715US","1279000213":"T-MobileInter0715US","1279000214":"AmazonAppleheadphones0715US","1279000225":"0515-inuse-tt-西班牙-60岁短途旅行【要英文URL】【1】","1279000228":"0515-inuse-tt-英国-托儿所助理【要英文URL】【5】","1279000230":"0612 InuSE-FB-美国-男士泳裤【1】","1279000231":"0612 InuSE-FB-美国-女性电子产品1【2】","1279000232":"0612 InuSE-FB-美国-女性电子产品2【3】","1279000233":"0612 InuSE-FB-美国-润滑剂【4】","1279000234":"0612 InuSE-FB-美国-男性健康护理产品【5】","1279000235":"0612 InuSE-FB-美国-五款最酷的男士小玩意【6】","1279000238":"0618 InuSE-FB-美国-CNA培训【6】","1279000241":"0702-InuSe-FB-美国-雪佛兰跑车【1】","1279000242":"0702-InuSe-FB-美国-润滑性唤起【2】","1279000243":"0702-InuSe-FB-美国-乳腺癌激素疗法【3】","1279000244":"0703-InuSe-FB-美国-不推荐的5款斯巴鲁SUV【1】","1279000245":"0703-InuSe-FB-美国-不值得买的7款SUV【2】","1279000246":"0706-InuSe-FB-美国-不推荐的5款日产SUV【1】","1279000247":"0706-InuSe-FB-美国-有益肾脏健康的饮品【2】","1279000248":"0706-InuSe-FB-美国-丧葬费用保险【3】","1279000249":"0706-InuSe-FB-美国-7天降低胆固醇【4】","1279000250":"0515-inuse-tt-西班牙-bizum贷款【要英文URL】【7】","1279000251":"0515-inuse-tt-罗马尼亚-CNP贷款【要英文URL】【6】","1279000252":"0518-inuse-tt-西班牙-学英语【要英文URL】【2】","1279000253":"0518-inuse-tt-英国-睡眠呼吸障碍【1】","1279000256":"0518-inuse-tt-巴西-增强性功能的维生素【要英文URL】【3】","1279000257":"0519-inuse-tt-德国-汽车保养技巧【要英文URL】【1】","1279000258":"0519-inuse-tt-比利时-LOA租车服务【要英文URL】【2】","1279000259":"0519-inuse-tt-比利时-二手车【要英文URL】【3】","1279000260":"【审核找不到URL】0520-inuse-tt-德国-单身邮轮【要英文URL】【1】","1279000261":"【审核找不到URL】0520-inuse-tt-英国-60岁老人旅游【2】","1279000262":"【审核找不到URL】0520-inuse-tt-法国-60岁老人旅游【3】【要英文URL】","1279000263":"【审核找不到URL】0520-inuse-tt-意大利-60岁老人旅游【4】【要英文URL】","1279000264":"【审核找不到URL】0520-inuse-tt-美国-二手廉价房车【5】","1279000265":"0520-inuse-tt-德国-托儿所助理【6】【要英文URL】","1279000266":"0520-inuse-tt-意大利-Klarna贷款【7】【要英文URL】","1279000267":"0521-CR-inuse-tt-澳大利亚-女性卫生用品【1】","1279000270":"0713-InuSe-FB-美国-女性早期HIV症状【1】","1279000271":"0713-InuSe-FB-美国-围栏成本【2】","1279000272":"0713-InuSe-FB-美国-家庭清洁费用【3】","1279000280":"0525-InuSe-FB-美国-注册护士【1】","1279000281":"0525-InuSe-FB-美国-丰田汉兰达【2】","1279000282":"0525-InuSe-FB-美国-阿拉斯加邮轮会员【3】","1279000283":"0602-InuSe-FB-美国-免疫系统衰弱迹象【1】","1279000284":"0602-InuSe-FB-美国-草坪护理【2】","1279000285":"0602-InuSe-FB-美国-本地奖学金【3】","1279000286":"0605-InuSe-FB-日本-退休工作【1】","1279000287":"0605-InuSe-FB-日本-70+退休工作【2】","1279000288":"0612-InuSe-FB-法国-退休兼职工作【1】","1279000289":"0612-InuSe-FB-美国-早餐减肥【2】","1279000297":"0519 InuSE-FB-意大利-Scalapay贷款【英文URL】"};
+
+// ======================== PST DATE ========================
+function getPstTodayISO() {
+  const now = new Date();
+  const bj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+  const bjHour = bj.getHours();
+  let pstToday;
+  if (bjHour >= 16) {
+    pstToday = new Date(bj);
+  } else {
+    pstToday = new Date(bj.getTime() - 86400000);
+  }
+  return pstToday.toISOString().slice(0, 10);
+}
+
+function isoToUsDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+function isoToPrevDay(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+// ======================== API FETCH ========================
+async function fetchWithProxy(url, timeoutMs = 15000) {
+  try {
+    const resp = await fetch(url, { signal: AbortSignal.timeout(Math.min(timeoutMs, 10000)) });
+    if (resp.ok) return resp;
+  } catch (_) {}
+  const proxies = [
+    u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+  ];
+  for (const p of proxies) {
+    try {
+      const resp = await fetch(p(url), { signal: AbortSignal.timeout(timeoutMs) });
+      if (resp.ok) return resp;
+    } catch (_) {}
+  }
+  throw new Error('无法连接 API（直接请求和CORS代理均失败）');
+}
+
+async function fetchInuvoRealtime(usDate) {
+  const url = `${BASE_URL}GetAdsenseOnlineRealtime?accessToken=${ACCESS_TOKEN}&startDate=${usDate}`;
+  const resp = await fetchWithProxy(url);
+  return await resp.json();
+}
+
+async function fetchInuvoDaily(usDate) {
+  const url = `${BASE_URL}GetAdsenseOnlineDaily?accessToken=${ACCESS_TOKEN}&startDate=${usDate}&endDate=${usDate}`;
+  const resp = await fetchWithProxy(url);
+  return await resp.json();
+}
+
+// ======================== DATA PROCESSING ========================
+function groupByCamp(data) {
+  const result = {};
+  for (const item of data) {
+    const cid = item.CAMP_ID;
+    if (!result[cid]) result[cid] = { earnings: 0, clicks: 0 };
+    result[cid].earnings += Number(item.ESTIMATED_EARNINGS) || 0;
+    result[cid].clicks += Number(item.ESTIMATED_CLICKS) || 0;
+  }
+  return result;
+}
+
+function getMaxUpdateTime(data) {
+  let max = '';
+  for (const item of data) {
+    if (item.DATE_UPLOADED_PST && item.DATE_UPLOADED_PST > max) {
+      max = item.DATE_UPLOADED_PST;
+    }
+  }
+  if (!max) return '--';
+  // "2026-07-23T01:10:14" → "2026-07-23 01:10"
+  return max.replace('T', ' ').slice(0, 16);
+}
+
+// ======================== ESCAPE ========================
+function esc(s) {
+  const div = document.createElement('div');
+  div.textContent = String(s ?? '');
+  return div.innerHTML;
+}
+
+// ======================== RENDER ========================
+function renderSummary(todayData, yestData, selectedOps, showVs, totalCids) {
+  const allCids = Object.keys(todayData);
+  const filteredCids = allCids.filter(cid => {
+    const op = CAMP_OPERATOR[cid];
+    return op && selectedOps.includes(op);
+  });
+  const tEarn = filteredCids.reduce((s, c) => s + (todayData[c]?.earnings || 0), 0);
+  const tClk = filteredCids.reduce((s, c) => s + (todayData[c]?.clicks || 0), 0);
+  const activeCount = filteredCids.filter(c => (todayData[c]?.earnings || 0) > 0).length;
+  const tRpc = tClk > 0 ? (tEarn / tClk).toFixed(2) : 'N/A';
+
+  // Yesterday totals
+  let yEarn = 0, yClk = 0, yRpc = 'N/A';
+  if (showVs && yestData) {
+    const fyCids = allCids.filter(cid => {
+      const op = CAMP_OPERATOR[cid];
+      return op && selectedOps.includes(op);
+    });
+    yEarn = fyCids.reduce((s, c) => s + (yestData[c]?.earnings || 0), 0);
+    yClk = fyCids.reduce((s, c) => s + (yestData[c]?.clicks || 0), 0);
+    yRpc = yClk > 0 ? (yEarn / yClk).toFixed(2) : 'N/A';
+  }
+
+  document.getElementById('summary').innerHTML = `
+    <div class="summary-card">
+      <div class="label">今日总回收</div>
+      <div class="value green">$${tEarn.toFixed(1)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">今日总转化</div>
+      <div class="value">${tClk}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">今日RPC</div>
+      <div class="value gold">${tRpc}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">活跃产品数</div>
+      <div class="value">${activeCount}</div>
+      <div class="sub">共 ${totalCids} 个 / 映射 ${filteredCids.length} 个</div>
+    </div>
+    ${showVs ? `
+    <div class="summary-card">
+      <div class="label" style="color:#3b82f6;">前一天总回收</div>
+      <div class="value" style="color:#3b82f6;">$${yEarn.toFixed(1)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label" style="color:#3b82f6;">前一天总转化</div>
+      <div class="value" style="color:#3b82f6;">${yClk}</div>
+    </div>
+    <div class="summary-card">
+      <div class="label" style="color:#3b82f6;">前一天RPC</div>
+      <div class="value" style="color:#3b82f6;">${yRpc}</div>
+    </div>
+    ` : ''}
+  `;
+}
+
+function renderTable(todayData, yestData, selectedOps, showVs) {
+  const allCids = Object.keys(todayData);
+
+  // Filter CAMP_IDs belonging to selected operators
+  const filteredCids = allCids.filter(cid => {
+    const op = CAMP_OPERATOR[cid];
+    return op && selectedOps.includes(op);
+  });
+
+  // Group by operator
+  const opGroups = {};
+  for (const cid of filteredCids) {
+    const op = CAMP_OPERATOR[cid];
+    if (!opGroups[op]) opGroups[op] = [];
+    opGroups[op].push(parseInt(cid));
+  }
+
+  // Sort operators
+  const sortedOps = Object.keys(opGroups).sort();
+
+  let rows = '';
+  let totalEarn = 0, totalClk = 0;
+  let totalYEarn = 0, totalYClk = 0;
+
+  for (const op of sortedOps) {
+    const cids = opGroups[op].sort((a, b) => a - b);
+    let opEarn = 0, opClk = 0;
+    let opYEarn = 0, opYClk = 0;
+
+    let opRows = '';
+    for (const cid of cids) {
+      const t = todayData[cid] || { earnings: 0, clicks: 0 };
+      const article = CAMP_ARTICLE[cid] || '';
+      const tRpc = t.clicks > 0 ? (t.earnings / t.clicks).toFixed(2) : 'N/A';
+      opEarn += t.earnings;
+      opClk += t.clicks;
+
+      opRows += `<tr>
+        <td></td>
+        <td><span class="article-cell" title="${esc(article)}">${esc(article) || '—'}</span></td>
+        <td>${cid}</td>
+        <td class="num">${t.earnings.toFixed(1)}</td>
+        <td class="num">${t.clicks}</td>
+        <td class="num">${tRpc}</td>
+      </tr>`;
+
+      if (showVs && yestData) {
+        const y = yestData[cid] || { earnings: 0, clicks: 0 };
+        const yRpc = y.clicks > 0 ? (y.earnings / y.clicks).toFixed(2) : 'N/A';
+        opYEarn += y.earnings;
+        opYClk += y.clicks;
+        opRows += `<tr class="yest-row">
+          <td><span class="vs-label">vs</span></td>
+          <td style="color:#64748b;font-size:13px;">${esc(article) || '—'}</td>
+          <td style="color:#64748b;">${cid}</td>
+          <td class="num" style="color:#3b82f6;">${y.earnings.toFixed(1)}</td>
+          <td class="num" style="color:#3b82f6;">${y.clicks}</td>
+          <td class="num" style="color:#3b82f6;">${yRpc}</td>
+        </tr>`;
+      }
+    }
+
+    const opRpc = opClk > 0 ? (opEarn / opClk).toFixed(2) : 'N/A';
+    totalEarn += opEarn;
+    totalClk += opClk;
+    totalYEarn += opYEarn;
+    totalYClk += opYClk;
+
+    // Operator header row
+    rows += `<tr style="background:#f8fafc;border-top:2px solid var(--border);">
+      <td colspan="6" style="font-weight:700;font-size:14px;padding:10px 16px;color:var(--text);">
+        ${esc(op)} · 回收 $${opEarn.toFixed(1)} · 转化 ${opClk} · RPC ${opRpc} · 产品 ${cids.length}
+      </td>
+    </tr>`;
+    rows += opRows;
+  }
+
+  // Grand total row
+  const totalRpc = totalClk > 0 ? (totalEarn / totalClk).toFixed(2) : 'N/A';
+  rows += `<tr class="total-row">
+    <td></td>
+    <td colspan="2">合计</td>
+    <td class="num green">$${totalEarn.toFixed(1)}</td>
+    <td class="num">${totalClk}</td>
+    <td class="num">${totalRpc}</td>
+  </tr>`;
+
+  if (showVs && yestData) {
+    const totalYRpc = totalYClk > 0 ? (totalYEarn / totalYClk).toFixed(2) : 'N/A';
+    rows += `<tr class="total-row yest-row">
+      <td><span class="vs-label">vs</span></td>
+      <td colspan="2" style="color:#3b82f6;">前一天合计</td>
+      <td class="num" style="color:#3b82f6;">$${totalYEarn.toFixed(1)}</td>
+      <td class="num" style="color:#3b82f6;">${totalYClk}</td>
+      <td class="num" style="color:#3b82f6;">${totalYRpc}</td>
+    </tr>`;
+  }
+
+  document.getElementById('tbody').innerHTML = rows || '<tr><td colspan="6"><div class="empty-msg"><div class="icon">📊</div>暂无符合条件的数据</div></td></tr>';
+}
+
+// ======================== MAIN ========================
+async function runQuery() {
+  const loadingEl = document.getElementById('loading');
+  const errorEl = document.getElementById('error');
+  const tableWrap = document.getElementById('table-wrap');
+  const updateTimeEl = document.getElementById('update-time');
+  const utValue = document.getElementById('ut-value');
+
+  const selectedOps = getSelectedOperators();
+  const dateIso = document.getElementById('pst-date').value;
+  const showVs = document.getElementById('vs-past-btn').classList.contains('active');
+
+  if (!dateIso) {
+    errorEl.textContent = '❌ 请选择日期';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  loadingEl.classList.add('show');
+  errorEl.classList.remove('show');
+  tableWrap.style.display = 'none';
+  document.getElementById('summary').innerHTML = '';
+
+  try {
+    const usDate = isoToUsDate(dateIso);
+    const todayRaw = await fetchInuvoRealtime(usDate);
+    const todayData = groupByCamp(todayRaw);
+    const updateTime = getMaxUpdateTime(todayRaw);
+
+    let yestData = null;
+    if (showVs) {
+      const prevIso = isoToPrevDay(dateIso);
+      const prevUs = isoToUsDate(prevIso);
+      const yestRaw = await fetchInuvoDaily(prevUs);
+      yestData = groupByCamp(yestRaw);
+    }
+
+    const totalCids = Object.keys(todayData).length;
+    renderSummary(todayData, yestData, selectedOps, showVs, totalCids);
+    renderTable(todayData, yestData, selectedOps, showVs);
+
+    utValue.textContent = updateTime;
+    updateTimeEl.style.visibility = 'visible';
+    tableWrap.style.display = 'block';
+
+  } catch (err) {
+    console.error('Query failed:', err);
+    errorEl.textContent = '❌ ' + (err.message || '请求失败，请检查网络后重试');
+    errorEl.classList.add('show');
+  } finally {
+    loadingEl.classList.remove('show');
+  }
+}
+
+// ======================== OPERATOR SELECT ========================
+function getSelectedOperators() {
+  return Array.from(document.querySelectorAll('.op-cb:checked')).map(cb => cb.value);
+}
+
+function updateOpTrigger() {
+  const selected = getSelectedOperators();
+  const trigger = document.getElementById('op-trigger');
+  const queryBtn = document.getElementById('query-btn');
+
+  if (selected.length === 0) {
+    trigger.textContent = '优化师：请选择 ▼';
+    trigger.classList.add('warn');
+    queryBtn.disabled = true;
+  } else {
+    trigger.textContent = '优化师：' + selected.map(s => s.replace('@', '')).join(', ') + ' ▼';
+    trigger.classList.remove('warn');
+    queryBtn.disabled = false;
+  }
+}
+
+// ======================== CLOCK ========================
+function updateClock() {
+  const now = new Date();
+  const bj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+  const h = String(bj.getHours()).padStart(2, '0');
+  const m = String(bj.getMinutes()).padStart(2, '0');
+  const month = new Date().getMonth() + 1;
+  const offset = (month >= 4 && month <= 10) ? 15 : 16;
+  let pstH = bj.getHours() - offset;
+  if (pstH < 0) pstH += 24;
+  const pstM = m;
+  document.getElementById('clock').textContent = `🕐 北京 ${h}:${m} | PST ${String(pstH).padStart(2,'0')}:${pstM}`;
+}
+
+// ======================== INIT ========================
+const pstDateInput = document.getElementById('pst-date');
+pstDateInput.value = getPstTodayISO();
+
+document.getElementById('query-btn').addEventListener('click', runQuery);
+
+// Operator dropdown
+const opTrigger = document.getElementById('op-trigger');
+const opDropdown = document.getElementById('op-dropdown');
+
+opTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  opDropdown.classList.toggle('show');
+});
+document.querySelectorAll('.op-cb').forEach(cb => {
+  cb.addEventListener('change', updateOpTrigger);
+});
+document.addEventListener('click', (e) => {
+  if (!opTrigger.contains(e.target) && !opDropdown.contains(e.target)) {
+    opDropdown.classList.remove('show');
+  }
+});
+
+// Vs past day toggle
+const vsBtn = document.getElementById('vs-past-btn');
+vsBtn.addEventListener('click', () => {
+  vsBtn.classList.toggle('active');
+});
+
+updateClock();
+setInterval(updateClock, 30000);
+</script>
+</body>
+</html>
