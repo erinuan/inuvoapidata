@@ -14,9 +14,8 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-.container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-/* Header */
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
 .header h1 { font-size: 24px; font-weight: 700; }
 .header h1 span { color: var(--primary); }
@@ -24,26 +23,23 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .header .update-time .ut-label { color: var(--text-secondary); }
 .header .update-time .ut-value { color: var(--text); font-weight: 600; }
 
-/* Controls */
 .control-group { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: var(--card); padding: 14px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
 .control-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); white-space: nowrap; }
 .date-input { padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; width: 150px; }
 .date-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 .pst-badge { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-left: 4px; }
 
-/* Operator multi-select */
 .op-select-wrap { position: relative; }
-.op-select-trigger { padding: 7px 28px 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; cursor: pointer; min-width: 160px; text-align: left; outline: none; white-space: nowrap; }
+.op-select-trigger { padding: 7px 28px 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; cursor: pointer; min-width: 180px; text-align: left; outline: none; white-space: nowrap; position: relative; }
 .op-select-trigger:focus { border-color: var(--primary); }
-.op-select-trigger::after { content: '▼'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-secondary); pointer-events: none; }
+.op-select-trigger::before { content: '▼'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-secondary); }
 .op-select-trigger.warn { border-color: var(--warning); background: #fffbeb; }
-.op-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 200px; max-height: 240px; overflow-y: auto; }
+.op-dropdown { display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; min-width: 220px; max-height: 240px; overflow-y: auto; }
 .op-dropdown.show { display: block; }
 .op-dropdown label { display: flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 400; color: var(--text); }
 .op-dropdown label:hover { background: #f8fafc; }
 .op-dropdown input[type="checkbox"] { accent-color: var(--primary); }
 
-/* Buttons */
 .btn { padding: 7px 18px; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-hover); }
@@ -52,7 +48,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-outline:hover { background: #f1f5f9; }
 .btn-outline.active { background: #dbeafe; border-color: var(--primary); color: var(--primary); }
 
-/* Summary */
 .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .summary-card { background: var(--card); padding: 14px 18px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .summary-card .label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
@@ -61,7 +56,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .summary-card .value.gold { color: var(--warning); }
 .summary-card .sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-/* Loading / Error */
 .loading { display: none; text-align: center; padding: 60px 20px; color: var(--text-secondary); }
 .loading.show { display: block; }
 .spinner { display: inline-block; width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 10px; }
@@ -69,12 +63,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .error-msg { display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 14px 18px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; }
 .error-msg.show { display: block; }
 
-/* Table */
 .table-wrap { background: var(--card); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
 .table-wrap table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.table-wrap th { background: #f8fafc; padding: 12px 16px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table-wrap th { background: #f8fafc; padding: 12px 14px; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 .table-wrap th.num { text-align: right; }
-.table-wrap td { padding: 10px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.table-wrap td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
 .table-wrap td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .table-wrap tr:last-child td { border-bottom: none; }
 .table-wrap tr:hover td { background: #f8fafc; }
@@ -84,19 +77,15 @@ tr.yest-row td { background: var(--yest-bg) !important; border-bottom: 1px solid
 tr.yest-row:hover td { background: #d4ebf8 !important; }
 tr.yest-row .vs-label { font-size: 11px; color: #3b82f6; font-weight: 500; }
 
-/* Totals row */
-tr.total-row td { font-weight: 700; background: #f0f9ff; border-top: 2px solid var(--primary); }
-tr.total-row.yest-row td { background: #d9ecf8 !important; }
+/* Op header row */
+tr.op-header td { background: #f8fafc !important; border-top: 2px solid var(--border); font-weight: 700; font-size: 13px; padding: 10px 14px; color: var(--text); }
 
-/* Article cell */
-.article-cell { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.article-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .article-cell:hover { white-space: normal; overflow: visible; }
 
-/* Empty state */
 .empty-msg { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
 .empty-msg .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
 
-/* Responsive */
 @media (max-width: 768px) {
   .container { padding: 10px; }
   .header { flex-direction: column; gap: 10px; }
@@ -123,7 +112,7 @@ tr.total-row.yest-row td { background: #d9ecf8 !important; }
     <span class="pst-badge">PST/PDT</span>
 
     <div class="op-select-wrap" style="margin-left:12px;">
-      <div class="op-select-trigger warn" id="op-trigger" tabindex="0">优化师：请选择 ▼</div>
+      <div class="op-select-trigger warn" id="op-trigger" tabindex="0">优化师：请选择</div>
       <div class="op-dropdown" id="op-dropdown">
         <label><input type="checkbox" value="@Erin-李苑" class="op-cb"> @Erin-李苑</label>
         <label><input type="checkbox" value="@Jolyne-冯妞妞" class="op-cb"> @Jolyne-冯妞妞</label>
@@ -150,12 +139,14 @@ tr.total-row.yest-row td { background: #d9ecf8 !important; }
     <table>
       <thead>
         <tr>
-          <th style="width:50px;"></th>
+          <th style="width:44px;">序号</th>
           <th>产品</th>
-          <th>Camp_id</th>
+          <th>报告日期</th>
           <th class="num">回收</th>
           <th class="num">转化</th>
           <th class="num">RPC</th>
+          <th>Camp_id</th>
+          <th>优化师</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -180,11 +171,8 @@ function getPstTodayISO() {
   const bj = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
   const bjHour = bj.getHours();
   let pstToday;
-  if (bjHour >= 16) {
-    pstToday = new Date(bj);
-  } else {
-    pstToday = new Date(bj.getTime() - 86400000);
-  }
+  if (bjHour >= 16) { pstToday = new Date(bj); }
+  else { pstToday = new Date(bj.getTime() - 86400000); }
   return pstToday.toISOString().slice(0, 10);
 }
 
@@ -197,6 +185,11 @@ function isoToPrevDay(iso) {
   const d = new Date(iso + 'T00:00:00');
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
+}
+
+function fmtReportDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
 // ======================== API FETCH ========================
@@ -245,16 +238,12 @@ function groupByCamp(data) {
 function getMaxUpdateTime(data) {
   let max = '';
   for (const item of data) {
-    if (item.DATE_UPLOADED_PST && item.DATE_UPLOADED_PST > max) {
-      max = item.DATE_UPLOADED_PST;
-    }
+    if (item.DATE_UPLOADED_PST && item.DATE_UPLOADED_PST > max) max = item.DATE_UPLOADED_PST;
   }
   if (!max) return '--';
-  // "2026-07-23T01:10:14" → "2026-07-23 01:10"
   return max.replace('T', ' ').slice(0, 16);
 }
 
-// ======================== ESCAPE ========================
 function esc(s) {
   const div = document.createElement('div');
   div.textContent = String(s ?? '');
@@ -273,7 +262,6 @@ function renderSummary(todayData, yestData, selectedOps, showVs, totalCids) {
   const activeCount = filteredCids.filter(c => (todayData[c]?.earnings || 0) > 0).length;
   const tRpc = tClk > 0 ? (tEarn / tClk).toFixed(2) : 'N/A';
 
-  // Yesterday totals
   let yEarn = 0, yClk = 0, yRpc = 'N/A';
   if (showVs && yestData) {
     const fyCids = allCids.filter(cid => {
@@ -287,21 +275,21 @@ function renderSummary(todayData, yestData, selectedOps, showVs, totalCids) {
 
   document.getElementById('summary').innerHTML = `
     <div class="summary-card">
-      <div class="label">今日总回收</div>
+      <div class="label">报告总回收</div>
       <div class="value green">$${tEarn.toFixed(1)}</div>
     </div>
     <div class="summary-card">
-      <div class="label">今日总转化</div>
+      <div class="label">报告总转化</div>
       <div class="value">${tClk}</div>
     </div>
     <div class="summary-card">
-      <div class="label">今日RPC</div>
+      <div class="label">报告RPC</div>
       <div class="value gold">${tRpc}</div>
     </div>
     <div class="summary-card">
       <div class="label">活跃产品数</div>
       <div class="value">${activeCount}</div>
-      <div class="sub">共 ${totalCids} 个 / 映射 ${filteredCids.length} 个</div>
+      <div class="sub">共 ${totalCids} 个 / 筛选 ${filteredCids.length} 个</div>
     </div>
     ${showVs ? `
     <div class="summary-card">
@@ -320,16 +308,17 @@ function renderSummary(todayData, yestData, selectedOps, showVs, totalCids) {
   `;
 }
 
-function renderTable(todayData, yestData, selectedOps, showVs) {
-  const allCids = Object.keys(todayData);
+function renderTable(todayData, yestData, selectedOps, showVs, dateIso) {
+  const reportDateDisp = fmtReportDate(dateIso);
+  const prevIso = isoToPrevDay(dateIso);
+  const prevDateDisp = fmtReportDate(prevIso);
 
-  // Filter CAMP_IDs belonging to selected operators
+  const allCids = Object.keys(todayData);
   const filteredCids = allCids.filter(cid => {
     const op = CAMP_OPERATOR[cid];
     return op && selectedOps.includes(op);
   });
 
-  // Group by operator
   const opGroups = {};
   for (const cid of filteredCids) {
     const op = CAMP_OPERATOR[cid];
@@ -337,88 +326,52 @@ function renderTable(todayData, yestData, selectedOps, showVs) {
     opGroups[op].push(parseInt(cid));
   }
 
-  // Sort operators
   const sortedOps = Object.keys(opGroups).sort();
-
   let rows = '';
-  let totalEarn = 0, totalClk = 0;
-  let totalYEarn = 0, totalYClk = 0;
+  let rowNum = 1;
 
   for (const op of sortedOps) {
     const cids = opGroups[op].sort((a, b) => a - b);
-    let opEarn = 0, opClk = 0;
-    let opYEarn = 0, opYClk = 0;
 
-    let opRows = '';
+    // Operator header row
+    rows += `<tr class="op-header">
+      <td colspan="8">${esc(op)}</td>
+    </tr>`;
+
     for (const cid of cids) {
       const t = todayData[cid] || { earnings: 0, clicks: 0 };
       const article = CAMP_ARTICLE[cid] || '';
       const tRpc = t.clicks > 0 ? (t.earnings / t.clicks).toFixed(2) : 'N/A';
-      opEarn += t.earnings;
-      opClk += t.clicks;
 
-      opRows += `<tr>
-        <td></td>
+      rows += `<tr>
+        <td>${rowNum++}</td>
         <td><span class="article-cell" title="${esc(article)}">${esc(article) || '—'}</span></td>
-        <td>${cid}</td>
+        <td>${reportDateDisp}</td>
         <td class="num">${t.earnings.toFixed(1)}</td>
         <td class="num">${t.clicks}</td>
         <td class="num">${tRpc}</td>
+        <td>${cid}</td>
+        <td>${esc(op)}</td>
       </tr>`;
 
       if (showVs && yestData) {
         const y = yestData[cid] || { earnings: 0, clicks: 0 };
         const yRpc = y.clicks > 0 ? (y.earnings / y.clicks).toFixed(2) : 'N/A';
-        opYEarn += y.earnings;
-        opYClk += y.clicks;
-        opRows += `<tr class="yest-row">
+        rows += `<tr class="yest-row">
           <td><span class="vs-label">vs</span></td>
           <td style="color:#64748b;font-size:13px;">${esc(article) || '—'}</td>
-          <td style="color:#64748b;">${cid}</td>
+          <td style="color:#64748b;">${prevDateDisp}</td>
           <td class="num" style="color:#3b82f6;">${y.earnings.toFixed(1)}</td>
           <td class="num" style="color:#3b82f6;">${y.clicks}</td>
           <td class="num" style="color:#3b82f6;">${yRpc}</td>
+          <td style="color:#64748b;">${cid}</td>
+          <td style="color:#64748b;">${esc(op)}</td>
         </tr>`;
       }
     }
-
-    const opRpc = opClk > 0 ? (opEarn / opClk).toFixed(2) : 'N/A';
-    totalEarn += opEarn;
-    totalClk += opClk;
-    totalYEarn += opYEarn;
-    totalYClk += opYClk;
-
-    // Operator header row
-    rows += `<tr style="background:#f8fafc;border-top:2px solid var(--border);">
-      <td colspan="6" style="font-weight:700;font-size:14px;padding:10px 16px;color:var(--text);">
-        ${esc(op)} · 回收 $${opEarn.toFixed(1)} · 转化 ${opClk} · RPC ${opRpc} · 产品 ${cids.length}
-      </td>
-    </tr>`;
-    rows += opRows;
   }
 
-  // Grand total row
-  const totalRpc = totalClk > 0 ? (totalEarn / totalClk).toFixed(2) : 'N/A';
-  rows += `<tr class="total-row">
-    <td></td>
-    <td colspan="2">合计</td>
-    <td class="num green">$${totalEarn.toFixed(1)}</td>
-    <td class="num">${totalClk}</td>
-    <td class="num">${totalRpc}</td>
-  </tr>`;
-
-  if (showVs && yestData) {
-    const totalYRpc = totalYClk > 0 ? (totalYEarn / totalYClk).toFixed(2) : 'N/A';
-    rows += `<tr class="total-row yest-row">
-      <td><span class="vs-label">vs</span></td>
-      <td colspan="2" style="color:#3b82f6;">前一天合计</td>
-      <td class="num" style="color:#3b82f6;">$${totalYEarn.toFixed(1)}</td>
-      <td class="num" style="color:#3b82f6;">${totalYClk}</td>
-      <td class="num" style="color:#3b82f6;">${totalYRpc}</td>
-    </tr>`;
-  }
-
-  document.getElementById('tbody').innerHTML = rows || '<tr><td colspan="6"><div class="empty-msg"><div class="icon">📊</div>暂无符合条件的数据</div></td></tr>';
+  document.getElementById('tbody').innerHTML = rows || '<tr><td colspan="8"><div class="empty-msg"><div class="icon">📊</div>暂无符合条件的数据</div></td></tr>';
 }
 
 // ======================== MAIN ========================
@@ -460,7 +413,7 @@ async function runQuery() {
 
     const totalCids = Object.keys(todayData).length;
     renderSummary(todayData, yestData, selectedOps, showVs, totalCids);
-    renderTable(todayData, yestData, selectedOps, showVs);
+    renderTable(todayData, yestData, selectedOps, showVs, dateIso);
 
     utValue.textContent = updateTime;
     updateTimeEl.style.visibility = 'visible';
@@ -484,13 +437,12 @@ function updateOpTrigger() {
   const selected = getSelectedOperators();
   const trigger = document.getElementById('op-trigger');
   const queryBtn = document.getElementById('query-btn');
-
   if (selected.length === 0) {
-    trigger.textContent = '优化师：请选择 ▼';
+    trigger.textContent = '优化师：请选择';
     trigger.classList.add('warn');
     queryBtn.disabled = true;
   } else {
-    trigger.textContent = '优化师：' + selected.map(s => s.replace('@', '')).join(', ') + ' ▼';
+    trigger.textContent = '优化师：' + selected.map(s => s.replace('@', '')).join(', ');
     trigger.classList.remove('warn');
     queryBtn.disabled = false;
   }
@@ -506,8 +458,7 @@ function updateClock() {
   const offset = (month >= 4 && month <= 10) ? 15 : 16;
   let pstH = bj.getHours() - offset;
   if (pstH < 0) pstH += 24;
-  const pstM = m;
-  document.getElementById('clock').textContent = `🕐 北京 ${h}:${m} | PST ${String(pstH).padStart(2,'0')}:${pstM}`;
+  document.getElementById('clock').textContent = `🕐 北京 ${h}:${m} | PST ${String(pstH).padStart(2,'0')}:${m}`;
 }
 
 // ======================== INIT ========================
@@ -516,10 +467,8 @@ pstDateInput.value = getPstTodayISO();
 
 document.getElementById('query-btn').addEventListener('click', runQuery);
 
-// Operator dropdown
 const opTrigger = document.getElementById('op-trigger');
 const opDropdown = document.getElementById('op-dropdown');
-
 opTrigger.addEventListener('click', (e) => {
   e.stopPropagation();
   opDropdown.classList.toggle('show');
@@ -533,11 +482,8 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Vs past day toggle
 const vsBtn = document.getElementById('vs-past-btn');
-vsBtn.addEventListener('click', () => {
-  vsBtn.classList.toggle('active');
-});
+vsBtn.addEventListener('click', () => vsBtn.classList.toggle('active'));
 
 updateClock();
 setInterval(updateClock, 30000);
