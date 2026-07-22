@@ -46,7 +46,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-outline { background: #fff; color: var(--text); border: 1px solid var(--border); }
 .btn-outline:hover { background: #f1f5f9; }
-.btn-outline.active { background: #dbeafe; border-color: var(--primary); color: var(--primary); }
+.btn-outline.active { background: #dbeafe; border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+.btn-accent { background: #fef3c7; color: #92400e; border: 2px solid #f59e0b; }
+.btn-accent:hover { background: #fde68a; border-color: #d97706; }
 
 .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .summary-card { background: var(--card); padding: 14px 18px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
@@ -104,6 +106,7 @@ tr.op-header td { background: #f8fafc !important; border-top: 2px solid var(--bo
     <div class="update-time" id="update-time" style="visibility:hidden;">
       <span class="ut-label">数据更新时间：</span><span class="ut-value" id="ut-value">--</span>
     </div>
+    <a href="https://my.feishu.cn/wiki/FYwLwKipWixQhSkVGGicUptLnSc" target="_blank" class="btn btn-accent" style="margin-left:10px;text-decoration:none;">补充产品名 ↗</a>
   </div>
 
   <div class="control-group">
@@ -122,7 +125,7 @@ tr.op-header td { background: #f8fafc !important; border-top: 2px solid var(--bo
     </div>
 
     <button class="btn btn-primary" id="query-btn" disabled>查询</button>
-    <button class="btn btn-outline" id="vs-past-btn" title="对比前一天数据">Vs past day</button>
+    <button class="btn btn-outline" id="vs-past-btn" title="对比前一天数据" style="background:#fffbeb;border-color:#f59e0b;color:#92400e;">Vs past day</button>
     <span style="font-size:12px;color:var(--text-secondary);margin-left:auto;" id="clock"></span>
   </div>
 
@@ -483,7 +486,20 @@ document.addEventListener('click', (e) => {
 });
 
 const vsBtn = document.getElementById('vs-past-btn');
-vsBtn.addEventListener('click', () => vsBtn.classList.toggle('active'));
+vsBtn.addEventListener('click', () => {
+  vsBtn.classList.toggle('active');
+  if (vsBtn.classList.contains('active')) {
+    vsBtn.style.background = '#dbeafe';
+    vsBtn.style.borderColor = 'var(--primary)';
+    vsBtn.style.color = 'var(--primary)';
+    vsBtn.style.boxShadow = '0 0 0 2px rgba(59,130,246,0.2)';
+  } else {
+    vsBtn.style.background = '#fffbeb';
+    vsBtn.style.borderColor = '#f59e0b';
+    vsBtn.style.color = '#92400e';
+    vsBtn.style.boxShadow = 'none';
+  }
+});
 
 updateClock();
 setInterval(updateClock, 30000);
